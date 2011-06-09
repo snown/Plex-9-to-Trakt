@@ -212,7 +212,7 @@ function parse_movie_section($xml)
         }
     }
     
-    echo("=== Found " . count($movies) . " movies");
+    echo("\n=== Found " . count($movies) . " movies");
     if (count($movies) > 0)
     {
         echo(", adding them to Trakt now. Please be patient, this may take some time ===\n\n");
