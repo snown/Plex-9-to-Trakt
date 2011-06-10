@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 
 // This script adds your shows from Plex 9 to Trakt, including seen/unseen status.
