@@ -14,7 +14,7 @@ Run the script by calling "./plex-9-to-trakt.php" while in the same directory as
 
 h4. Command Line Options
 
-|{padding-right:5px}.-m, movies-only | Only parse Movie sections of the Plex 9 Media Server|
-|-t, --tv-only | Only parse TV sections of the Plex 9 Media Server|
-|-l, --library | Add all results to your library ignoring play count|
-|-w, --watched | Add and update watched files only, ignore unwatched content|
+|{padding-right:5px}.-m, == --movies-only == | Only parse Movie sections of the Plex 9 Media Server|
+|-t, == --tv-only == | Only parse TV sections of the Plex 9 Media Server|
+|-l, == --library == | Add all results to your library ignoring play count|
+|-w, == --watched == | Add and update watched files only, ignore unwatched content|
