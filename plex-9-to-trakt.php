@@ -14,6 +14,8 @@ echo("\n\n=== Starting the import. This may take some time. ===\n");
 
 ini_set('memory_limit', '512M');
 set_time_limit(6000);
+// Load in command line options
+$options = getargs(array("m" => "movies-only", "t" => "tv-only", "w" => "watched", "l" => "library"));
 
 // Get XML with sections from Plex
 $sections_xml = simplexml_load_string(file_get_contents(PLEX_URL . '/library/sections'));
@@ -35,21 +37,27 @@ foreach($sections_xml->Directory AS $value)
 }
 
 // Loop through each section and parse out the correct data
-foreach ($show_sections AS $key)
+if ($options["movies-only"] === false)
 {
-    // Get XML with section's shows from Plex.
-    $section_xml = simplexml_load_string(file_get_contents(PLEX_URL . '/library/sections/' . $key . '/all'));
-    $section_title = (string) $section_xml->attributes()->title1;
-    echo("\nParsing section \"" . $section_title . "\"...\n\n");
-    parse_show_section($section_xml);
+    foreach ($show_sections AS $key)
+    {
+        // Get XML with section's shows from Plex.
+        $section_xml = simplexml_load_string(file_get_contents(PLEX_URL . '/library/sections/' . $key . '/all'));
+        $section_title = (string) $section_xml->attributes()->title1;
+        echo("\nParsing section \"" . $section_title . "\"...\n\n");
+        parse_show_section($section_xml);
+    }
 }
-foreach ($movie_sections AS $key)
+if ($options["tv-only"] === false)
 {
-    // Get XML with section's movies from Plex.
-    $section_xml = simplexml_load_string(file_get_contents(PLEX_URL . '/library/sections/' . $key . '/all'));
-    $section_title = (string) $section_xml->attributes()->title1;
-    echo("\nParsing section \"" . $section_xml->attributes()->title1 . "\"...\n\n");
-    parse_movie_section($section_xml);
+    foreach ($movie_sections AS $key)
+    {
+        // Get XML with section's movies from Plex.
+        $section_xml = simplexml_load_string(file_get_contents(PLEX_URL . '/library/sections/' . $key . '/all'));
+        $section_title = (string) $section_xml->attributes()->title1;
+        echo("\nParsing section \"" . $section_xml->attributes()->title1 . "\"...\n\n");
+        parse_movie_section($section_xml);
+    }
 }
 
 echo("\n=== All Done! ===\n");
@@ -136,12 +144,19 @@ function parse_show_section($xml)
         $data->year = $value->year;
         $data->episodes = $data_watched;
         
-        add_show_watched($data);
+        if ($options["library"] === false)
+        {
+            add_show_watched($data);
+        }
+        else
+        {
+            add_show_unwatched($data);
+        }
 
         unset($data);
       }
 
-      if (count($data_unwatched) > 0)
+      if (($options["watched"] === false) && (count($data_unwatched) > 0))
       {
         $data->title = $title;
         $data->year = $value->year;
@@ -236,12 +251,19 @@ function parse_movie_section($xml)
         if (count($movies_watched) > 0)
         {
             $data->movies = $movies_watched;
-            add_movies_watched($data);
+            if ($options["library"] === false)
+            {
+                add_movies_watched($data);
+            }
+            else
+            {
+                add_movies_unwatched($data);
+            }
         
             unset($data);
         }
     
-        if (count($movies_unwatched) > 0)
+        if (($options["watched"] === false) && (count($movies_unwatched) > 0))
         {
             $data->movies = $movies_unwatched;
             add_movies_unwatched($data);
@@ -318,6 +340,78 @@ function curl_post($url, $data)
   curl_close($ch);
 
   return $return;
+}
+
+function getargs($arguments)
+{
+    $result_array = array();
+    $sys_args = $_SERVER['argv'];
+    array_shift($sys_args);
+    
+    foreach ($arguments as $key => $value)
+    {
+        if (in_array('-' . rtrim($key, ":"), $sys_args))
+        {
+            $match_position = array_search('-' . rtrim($key, ":"), $sys_args);
+            
+            if (stripos($key, ":") === false)
+            {
+                $result_array[$key] = true;
+                $result_array[$value] = true;
+                
+                unset($sys_args[$match_position]);
+            }
+            else
+            {
+                $key = rtrim($key, ":");
+                $value = rtrim($value, ":");
+                
+                $result_array[$key] = $sys_args[$match_position + 1];
+                $result_array[$value] = $sys_args[$match_position + 1];
+                
+                unset($sys_args[$match_position]);
+                unset($sys_args[$match_position + 1]);
+            }
+        }
+        else if (in_array('--' . rtrim($value, ":"), $sys_args))
+        {
+            $match_position = array_search('--' . rtrim($value, ":"), $sys_args);
+            
+            if (stripos($value, ":") === false)
+            {
+                $result_array[$key] = true;
+                $result_array[$value] = true;
+                
+                unset($sys_args[$match_position]);
+            }
+            else
+            {
+                $key = rtrim($key, ":");
+                $value = rtrim($value, ":");
+                
+                $result_array[$key] = $sys_args[$match_position + 1];
+                $result_array[$value] = $sys_args[$match_position + 1];
+                
+                unset($sys_args[$match_position]);
+                unset($sys_args[$match_position + 1]);
+            }
+        }
+        else
+        {
+            $key = rtrim($key, ":");
+            $value = rtrim($value, ":");
+            
+            $result_array[$key] = false;
+            $result_array[$value] = false;
+        }
+    }
+    
+    if (count($sys_args) > 0)
+    {
+        var_dump($sys_args);
+    }
+    
+    return $result_array;
 }
 
 ?>
