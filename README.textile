@@ -1,4 +1,4 @@
-h2. Plex 9 to Trakt "!http://stillmaintained.com/roytomeij/plex-9-to-trakt.png!":http://stillmaintained.com/roytomeij/plex-9-to-trakt
+h2. Plex 9 to Trakt "!http://stillmaintained.com/roytomeij/Plex-9-to-Trakt.png!":http://stillmaintained.com/roytomeij/Plex-9-to-Trakt
 
 Plex 9 to Trakt is a PHP script to run from your command line to insert the TV-shows and Movies you have in Plex 9 Media Server into "Trakt.tv":http://trakt.tv/. I only tested this on OSX 10.6.6+.
 
