@@ -15,7 +15,7 @@ echo("\n\n=== Starting the import. This may take some time. ===\n");
 ini_set('memory_limit', '512M');
 set_time_limit(6000);
 // Load in command line options
-$options = getargs(array("m" => "movies-only", "t" => "tv-only", "w" => "watched", "l" => "library"));
+$options = getargs(array("m" => "movies-only", "t" => "tv-only", "w" => "watched", "l" => "library", "d" => "debug"));
 
 // Get XML with sections from Plex
 $sections_xml = simplexml_load_string(file_get_contents(PLEX_URL . '/library/sections'));
@@ -64,6 +64,7 @@ echo("\n=== All Done! ===\n");
 
 function parse_show_section($xml)
 {
+    global $options;
     $show_keys = array();
     $shows = array();
 
@@ -172,6 +173,7 @@ function parse_show_section($xml)
 
 function parse_movie_section($xml)
 {
+    global $options;
     $movie_keys = array();
     $movies = array();
     
@@ -280,41 +282,57 @@ function parse_movie_section($xml)
 // Some function for recurring actions.
 function add_show_watched($data)
 {
+    global $options;
     $response = curl_post('http://api.trakt.tv/show/episode/seen/', $data);
     
     if ($response == false)
     {
         echo("Communication Error when adding watched shows\n");
+    } elseif ($options["debug"] === true)
+    {
+        echo("Response from Trakt: " . $response);
     }
 }
 
 function add_show_unwatched($data)
 {
+    global $options;
     $response = curl_post('http://api.trakt.tv/show/episode/library/', $data);
     
     if ($response == false)
     {
         echo("Communication Error when adding unwatched shows\n");
+    } elseif ($options["debug"] === true)
+    {
+        echo("Response from Trakt: " . $response);
     }
 }
 
 function add_movies_watched($data)
 {
+    global $options;
     $response = curl_post('http://api.trakt.tv/movie/seen/', $data);
     
     if ($response == false)
     {
         echo("Communication Error when adding watched movies\n");
+    } elseif ($options["debug"] === true)
+    {
+        echo("Response from Trakt: " . $response);
     }
 }
 
 function add_movies_unwatched($data)
 {
+    global $options;
     $response = curl_post('http://api.trakt.tv/movie/library/', $data);
     
     if ($response == false)
     {
         echo("Communication Error when adding unwatched movies\n");
+    } elseif ($options["debug"] === true)
+    {
+        echo("Response from Trakt: " . $response);
     }
 }
 
@@ -325,16 +343,24 @@ function curl_post($url, $data)
   $data->username = TRAKT_USERNAME;
   $data->password = sha1(TRAKT_PASSWORD);
   $data = json_encode($data);
+  
+  $opt_array = array(
+      CURLOPT_URL => $url . TRAKT_APIKEY,
+      CURLOPT_POSTFIELDS => $data,
+        CURLOPT_POST => 1,
+        CURLOPT_RETURNTRANSFER => 1,
+        CURLOPT_TIMEOUT => 0
+      );
 
   $ch = curl_init();
-  curl_setopt_array($ch, array(
-    CURLOPT_URL => $url . TRAKT_APIKEY,
-    CURLOPT_POSTFIELDS => $data,
-      CURLOPT_POST => 1,
-      CURLOPT_RETURNTRANSFER => 1,
-      CURLOPT_TIMEOUT => 0
-    )
-  );
+  curl_setopt_array($ch, $opt_array);
+  
+  global $options;
+  if ($options["debug"] === true)
+  {
+    echo("Message sent to Trakt:\n");
+    print_r($opt_array);
+  }
 
   $return = curl_exec($ch);
   curl_close($ch);
